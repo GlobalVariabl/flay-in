@@ -79,20 +79,16 @@ class Simulation:
                     self.graph["hubs"][leaving]["holde"] -= 1
 
                 self.graph["hubs"][landing]["holde"] += 1
-                # print(self.graph["hubs"][landing]["holde"])
-                # if self.graph["hubs"][landing]["holde"] == max_drones:
-                #     self.graph["hubs"][landing]["state"] = "full"
-                # else:
-                #     self.graph["hubs"][landing]["state"] = "empty"
+
+                if self.graph["hubs"][landing]["holde"] == max_drones:
+                    self.graph["hubs"][landing]["state"] = "full"
+                else:
+                    self.graph["hubs"][landing]["state"] = "empty"
 
                 if connection_idx is not None:
                     self.graph["graph"][drone.location][connection_idx][
                         "holde"
                     ] += 1
-                
-                # print(self.graph["graph"][drone.location][connection_idx])
-                if self.graph["graph"][drone.location][connection_idx]["capacity"] == self.graph["graph"][drone.location][connection_idx]["holde"]:
-                    self.graph["hubs"][landing]["holde"] = max_drones
 
                 if zone_data.get("zone") == "restricted":
                     drone.wait_turns = 1
@@ -104,17 +100,11 @@ class Simulation:
                 else:
                     drone.move_to_next_zone(landing)
                     move_track.append((drone.drones_id, landing))
-                print(self.graph["graph"])
-            
+
             for connection_zone in self.graph["graph"]:
                 for holde in self.graph["graph"][connection_zone]:
-                    # if holde["holde"] > 0 send reset to rali zone size
                     holde["holde"] = 0
-            
-            
             zone_req.append((move_track, self.turn))
-            
-            
             if move_track:
                 output: str = " ".join(
                     f"  D{did}-{zone}" for did, zone in move_track
@@ -124,4 +114,3 @@ class Simulation:
             self.turn += 1
 
         print(f"\nTotal turns: {self.turn}")
-        print(zone_req)

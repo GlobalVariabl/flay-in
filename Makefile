@@ -25,13 +25,13 @@ debug:
 	$(PYTHON) -m pdb $(MAIN)
 
 lint:
-	flake8 *.py
 	mypy . \
 		--warn-return-any \
 		--warn-unused-ignores \
 		--ignore-missing-imports \
 		--disallow-untyped-defs \
 		--check-untyped-defs
+	flake8 *.py
 
 
 lint-strict:

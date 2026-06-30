@@ -34,16 +34,16 @@ class RegEx_line:
             ValueError: if any line is invalid
         """
 
-        self.drones_number = RegEx_line.validit_drones(self.drones_number)
+        self.drones_number = RegEx_line.validit_drones(self.drones_number[0],self.drones_number[1] + 1)
         self.parsed_alls.append({"drones_number": self.drones_number})
 
         self.start_zone[0] = RegEx_line.validit_hub_sd(
-            self.start_zone[0].split(":", 1)[1].strip(), True
+            self.start_zone[0].split(":", 1)[1].strip(), True,  self.start_zone[1]+1
         )
         self.parsed_alls.append(self.start_zone)
 
         self.end_zone[0] = RegEx_line.validit_hub_sd(
-            self.end_zone[0].split(":", 1)[1].strip(), True
+            self.end_zone[0].split(":", 1)[1].strip(), True,  self.end_zone[1]+1
         )
         self.parsed_alls.append(self.end_zone)
 
@@ -59,13 +59,13 @@ class RegEx_line:
             )
         for idx, line in enumerate(self.hub):
             self.hub[idx][0] = RegEx_line.validit_hub_sd(
-                line[0].split(":")[1].strip(), False
+                line[0].split(":", 1)[1], False,  line[1] + 1
             )
             self.parsed_alls.append(self.hub[idx])
             RegEx_line.hubs.append(self.hub[idx][0])
         for idx, line in enumerate(self.connection):
             self.connection[idx][0] = RegEx_line.validate_connection(
-                line[0].split(":", 1)[1].strip()
+                line[0].split(":", 1)[1].strip(), line[1] + 1
             )
             self.parsed_alls.append(self.connection[idx])
             RegEx_line.connections.append(self.connection[idx][0])
@@ -83,22 +83,23 @@ class RegEx_line:
         }
 
     @staticmethod
-    def validit_drones(line: str) -> int:
+    def validit_drones(line: str, indx: int) -> int:
         """
         Parse and validate a hub/start_hub/end_hub line.
         Extracts name, coordinates, and metadata.
         """
         drones: Optional[int] = None
-        patten = re.match(r"^nb_drones\s*:\s*(\d+)\s*$", line)
+        patten = re.match(r"^nb_drones\s*:\s*(\d+)\s*$", line.strip())
         if not patten:
-            raise ValueError(f"Invalid line nb_drones : {line}")
+            raise ValueError(f"Invalid line nb_drones : {line}, line at {indx}" )
         drones = int(patten.group(1))
         if drones < 1:
             raise ValueError("nb_drones must be greater than 0")
         return drones
 
     @staticmethod
-    def validit_hub_sd(line: str, ist_special: bool) -> dict[str, Any]:
+    def validit_hub_sd(line: str, ist_special: bool, indx: int) -> dict[str, Any]:
+        # print(line, indx)
         """
         Parse and validate a hub/start_hub/end_hub line.
         Extracts name, coordinates, and metadata.
@@ -119,14 +120,14 @@ class RegEx_line:
         }
         match = pattern.match(line.strip())
         if not match:
-            raise ValueError(f"Invalid hub line format: '{line}'")
+            raise ValueError(f"Invalid hub line format: '{line.strip()}' line at {indx}")
 
         data: dict[str, Any] = match.groupdict()
         name: str = data["name"]
         if "-" in name:
             raise ValueError(
                 f"Zone name '{name}' cannot contain dashes. "
-                f"Dashes are reserved for connection syntax"
+                f"Dashes are reserved for connection syntax, line at {indx}"
             )
         metadata: Optional[str] = data.get("metadata")
         if metadata is not None:
@@ -141,25 +142,25 @@ class RegEx_line:
             for key, value in all_pairs:
                 if key not in valid_keys:
                     raise ValueError(
-                        f"Invalid metadata key '{key}' in line: '{line}'."
+                        f"Invalid metadata key '{key}' in line: '{line}'., line at {indx}"
                     )
                 if key in valid_key_repet:
                     raise ValueError(
-                        f"Duplicate metadata key '{key}' in line: '{line}'."
+                        f"Duplicate metadata key '{key}' in line: '{line}'., line at {indx}"
                     )
 
                 if key == "max_drones":
                     if not re.match(r"^[0-9][0-9]*$", value):
                         raise ValueError(
                             f"Invalid max_drones value '{value}'"
-                            f" in line: '{line}'."
+                            f" in line: '{line}'., line at {indx}"
                             f" Must be a positive integer"
                         )
                 else:
                     if not re.match(r"^[a-zA-Z\-]+$", value):
                         raise ValueError(
                             f"Invalid value '{value}' for key"
-                            f" '{key}' in line: '{line}'. "
+                            f" '{key}' in line: '{line}'. , line at {indx}"
                         )
                 valid_key_repet[key] = value
                 cleaned = cleaned.replace(f"{key}={value}", "")
@@ -169,8 +170,8 @@ class RegEx_line:
                 if cleaned:
                     raise ValueError(
                         f"Invalid metadata format: '{metadata}'"
-                        f" in line: '{line}'. "
-                        f"Unexpected text: '{cleaned}'"
+                        f" in line: '{line.strip()}'. "
+                        f"Unexpected text: '{cleaned}', line at {indx}"
                     )
 
             for key, value in meta_pattern.findall(metadata):
@@ -178,7 +179,7 @@ class RegEx_line:
                     if value not in valid_zones:
                         raise ValueError(
                             f"Invalid zone type '{value}'"
-                            f" in line: '{line}'."
+                            f" in line: '{line}'., line at {indx}"
                         )
                     defaults["zone"] = value
                 if key == "color":
@@ -203,7 +204,7 @@ class RegEx_line:
         return result
 
     @staticmethod
-    def validate_connection(line: str) -> dict[str, Any]:
+    def validate_connection(line: str, indx: int) -> dict[str, Any]:
         """
         Parse and validate a connection line.
         Extracts from_hub, to_hub, and max_link_capacity.
@@ -220,7 +221,7 @@ class RegEx_line:
         if not connections:
             raise ValueError(
                 f"Invalid connections line format: '{line}'"
-                f" Expected 'from-to [max_link_capacity=N]'"
+                f" Expected '<from>-<to> [max_link_capacity=N]', line at {indx}"
             )
         data: dict[str, Any] = connections.groupdict()
         from_hub: str = data["from_hub"]
@@ -228,16 +229,16 @@ class RegEx_line:
         capacity: Optional[str] = data["capacity"]
 
         if not from_hub or not to_hub:
-            raise ValueError(f"Empty zone name in connection: '{line}'")
+            raise ValueError(f"Empty zone name in connection: '{line}', line at {indx}")
         if from_hub == to_hub:
-            raise ValueError(f"Zone cannot connect to itself: '{line}' !?")
+            raise ValueError(f"Zone cannot connect to itself: '{line}', line at {indx} !?")
 
         if capacity:
             capacity_int: int = int(capacity)
             if capacity_int <= 0:
                 raise ValueError(
                     f"max_link_capacity must be positive,"
-                    f" got {capacity_int} in: '{line}'"
+                    f" got {capacity_int} in: '{line}', line at {indx}"
                 )
             defaults["max_link_capacity"] = capacity_int
 

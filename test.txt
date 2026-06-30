@@ -1,27 +1,18 @@
-nb_drones: 5
+          nb_drones:          6                    
+# Medium Level 2: Circular loop with restricted zones
 
-#=== LAYER 0: The Nightmare Begins ===,
-            start_hub: start 0 0 [color=green max_drones=25 zone=priority]
-end_hub: end 5 0 [color=green max_drones=2 zone=restricted]
+start_hub: start 0 0 [color=green max_drones=6]
+hub: loop_a 1 0 [color=orange max_drones=2]
+hub: loop_b 2 0 [color=orange max_drones=2]
+hub: loop_c 2 1 [color=orange max_drones=2]
+hub: loop_d 1 1 [color=orange max_drones=2]
+hub: exit_point 3 0 [zone=restricted color=blue]
+end_hub: goal 4 0 [color=red max_drones=6]
 
-#Single-file entry gates (extreme bottleneck),
-hub: a 1 2 [color=red max_drones=1 zone=priority]
-hub: b 2 2 [color=red max_drones=1  zone=priority]
-hub: c 3 2 [color=red max_drones=2 zone=priority] # to be fix it  max_drones=2 to 1
-hub: j 4 2 [color=red max_drones=1  zone=priority]
-
-hub: d 1 -2 [color=red max_drones=1  zone=priority]
-hub: e 4 -2 [color=red max_drones=1  zone=normal]
-hub: f 3 -2 [color=red max_drones=1]
-
-#Layer 1 connections (maze of despair),
-connection: start-c [max_link_capacity=1] ## [max_link_capacity=2]  max_drones=2 to 1
-connection: a-b
-connection: c-b
-connection: c-j
-connection: end-j
-
-connection: start-e
-connection: d-f
-connection: e-f
-connection: end-f
+connection: start-loop_a [max_link_capacity=2]
+connection: loop_a-loop_b [max_link_capacity=2]
+connection: loop_b-loop_c [max_link_capacity=2]
+connection: loop_c-loop_d [max_link_capacity=2]
+connection: loop_d-loop_a [max_link_capacity=2]
+connection: loop_b-exit_point
+connection: exit_point-goal

@@ -2,7 +2,7 @@ from typing import Optional
 
 
 class Read_file:
-    n_drones: str = ""
+    n_drones: list[str | int] = []
     s_zone: list[str | int] = []
     e_zone: list[str | int] = []
     hub: list[list[str | int]] = []
@@ -37,7 +37,7 @@ class Read_file:
         )
 
     @staticmethod
-    def valid_line_dron(list_lines: list[str]) -> str:
+    def valid_line_dron(list_lines: list[str]) -> list[str | int]:
         """
         Validates that nb_drones appears exactly once on the first
         non-comment line. Returns the line index where it was found.
@@ -74,14 +74,13 @@ class Read_file:
                 f"Found at line {line_dron + 1}, but first non-comment"
                 f" line is {first_non_comment_line_index + 1}"
             )
-        """handl # """
         raw_line: str = list_lines[line_dron].rstrip("\n")
         if "#" in raw_line:
             line_whith_comm: str = raw_line[raw_line.index("#"):]
             line_whith_no_comm: str = raw_line.replace(line_whith_comm, "")
         else:
             line_whith_no_comm = raw_line
-        return line_whith_no_comm
+        return [line_whith_no_comm, line_dron]
 
     @staticmethod
     def valid_special_zone(
@@ -112,7 +111,6 @@ class Read_file:
                 f" last at line {line_idx + 1}"
             )
 
-        """handl # """
         raw_line: str = list_lines[line_idx].rstrip("\n")
         if "#" in raw_line:
             line_whith_comm: str = raw_line[raw_line.index("#"):]
@@ -138,7 +136,6 @@ class Read_file:
             if not stripped or stripped.startswith("#"):
                 continue
             if stripped.startswith(line_word):
-                """handl #"""
                 raw_line: str = line.rstrip("\n")
                 if "#" in raw_line:
                     line_whith_comm: str = raw_line[raw_line.index("#"):]

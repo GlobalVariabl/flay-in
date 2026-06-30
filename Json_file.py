@@ -56,7 +56,7 @@ class Json_file:
             Json_file.graph["graph"][items["from"]].append(
                 {
                     "to": items["to"],
-                    "capacity": items["max_link_capacity"], ## add smole logc select min (max_link_capacity, "max_drones": item["max_drones"])
+                    "capacity": items["max_link_capacity"],
                     # "state": "empty",
                     "holde": 0,
                 }
@@ -64,7 +64,7 @@ class Json_file:
             Json_file.graph["graph"][items["to"]].append(
                 {
                     "to": items["from"],
-                    "capacity": items["max_link_capacity"], ## add smole logc select min (max_link_capacity, "max_drones": item["max_drones"])
+                    "capacity": items["max_link_capacity"],
                     # "state": "empty",
                     "holde": 0,
                 }
@@ -80,7 +80,7 @@ class Json_file:
         costs: dict[str, int] = {
             "normal": 1,
             "priority": 1,
-            "restricted": 3,
+            "restricted": 2,
             "blocked": 151,
         }
         return costs[zone_name]
@@ -123,12 +123,8 @@ class Json_file:
                 f"No Path Found from {start} to {goale}"
                 f" Check for: All blocked zones cutting all routes"
             )
-    
-        return distances
 
-    @staticmethod
-    def overwriting_capacity(): # to do A-B = 2 if B 
-        ...
+        return distances
 
     def get_data(self) -> dict[str, Any]:
         """Return parsed data as a dictionary."""
