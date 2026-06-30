@@ -1,6 +1,6 @@
 from typing import Any, Optional
 from Drone import Drone
-
+from Color import *
 
 class Simulation:
     """Manages turn-by-turn simulation.
@@ -12,6 +12,8 @@ class Simulation:
         self.turn: int = 0
         self.goal: str = graph["end_zone"]
         self.track_drone: list[Drone] = []
+        self.printer = RestrictedMovePrinter(graph)
+        self.printes = SimpleMovePrinter(graph)
         self.run()
 
     def all_delivered(self) -> bool:
@@ -21,7 +23,6 @@ class Simulation:
     def run(self) -> None:
         """Run simulation until all drones delivered."""
         self.turn = 0
-        zone_req: list[Any] = []
 
         for drone_id in range(1, self.graph["drones_number"] + 1):
             drone = Drone(drone_id, self.graph)
@@ -104,10 +105,11 @@ class Simulation:
             for connection_zone in self.graph["graph"]:
                 for holde in self.graph["graph"][connection_zone]:
                     holde["holde"] = 0
-            zone_req.append((move_track, self.turn))
             if move_track:
                 output: str = " ".join(
-                    f"  D{did}-{zone}" for did, zone in move_track
+                    "  " + self.printer.format_move(did, zone) if "-" in zone
+                    else "  " + self.printes.format_move(did, zone)
+                    for did, zone in move_track
                 )
                 print(f"Turn {self.turn + 1}: {output}")
 
