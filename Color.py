@@ -1,65 +1,78 @@
-# from colorama import Fore, Style, init
-# from typing import Any
-# init()
+import webcolors
 
-# graph ={
-# 'drones_number': 5, 
-# 'start_zone': 'start', 
-# 'end_zone': 'end', 
-# 'hubs': {
-#         'start': {'coordinate': (0, 0), 'zone': 'priority', 'color': 'green', 'max_drones': "inf", 'holde': 5}, 
-#         'end': {'coordinate': (5, 0), 'zone': 'restricted', 'color': 'green', 'max_drones': 5, 'holde': 0}, 
-#         'a': {'coordinate': (1, 2), 'zone': 'priority', 'color': 'red', 'max_drones': 1, 'holde': 0, "state": "full"}, 
-#         'b': {'coordinate': (2, 2), 'zone': 'priority', 'color': 'red', 'max_drones': 1, 'holde': 0}, 
-#         'c': {'coordinate': (3, 2), 'zone': 'priority', 'color': 'red', 'max_drones': 1, 'holde': 0}, 
-#         'j': {'coordinate': (4, 2), 'zone': 'priority', 'color': 'red', 'max_drones': 1, 'holde': 0}, 
-#         'd': {'coordinate': (1, -2), 'zone': 'priority', 'color': 'red', 'max_drones': 1, 'holde': 0}, 
-#         'e': {'coordinate': (4, -2), 'zone': 'normal', 'color': 'red', 'max_drones': 1, 'holde': 0}, 
-#         'f': {'coordinate': (3, -2), 'zone': 'normal', 'color': 'red', 'max_drones': 1, 'holde': 0}}, 
-# 'graph': {
-#         'start': [{'to': 'c', 'capacity': 1, 'holde': 0, }, {'to': 'e', 'capacity': 1, 'holde': 0}], 
-#         'c': [{'to': 'start', 'capacity': 1, 'holde': 0}, {'to': 'b', 'capacity': 1, 'holde': 0}, {'to': 'j', 'capacity': 1, 'holde': 0}], 
-#         'a': [{'to': 'b', 'capacity': 1, 'holde': 0}], 'b': [{'to': 'a', 'capacity': 1, 'holde': 0}, {'to': 'c', 'capacity': 1, 'holde': 0}], 
-#         'j': [{'to': 'c', 'capacity': 1, 'holde': 0}, {'to': 'end', 'capacity': 1, 'holde': 0}], 
-#         'end': [{'to': 'j', 'capacity': 1, 'holde': 0}, {'to': 'f', 'capacity': 1, 'holde': 0}], 
-#         'e': [{'to': 'start', 'capacity': 1, 'holde': 0}, {'to': 'f', 'capacity': 1, 'holde': 0}], 
-#         'd': [{'to': 'f', 'capacity': 1, 'holde': 0}], 'f': [{'to': 'd', 'capacity': 1, 'holde': 0}, {'to': 'e', 'capacity': 1, 'holde': 0}, {'to': 'end', 'capacity': 1, 'holde': 0}]}, 
-# 'distances': {
-#     'start': [3, 'c'], 'end': [0, 'end'], 'a': [4, 'b'], 'b': [3, 'c'], 'c': [2, 'j'], 'j': [1, 'end'], 'd': [3, 'f'], 'e': [4, 'f'], 'f': [2, 'end']}
-#     }
+class BaseDronePrinter:
+    RESET: str = "\033[0m"
+    
+    def __init__(self, graph: dict) -> None:
+        self.all_color: dict = self.get_zone_color(graph["hubs"])
+        self.hex_color: dict = self.color_to_hex(self.all_color)
+    
+    @staticmethod
+    def get_zone_color(hubs: dict) -> dict:
+        all_color: dict = {}
+        for zone in hubs:
+            color_name: str = hubs[zone]['color']
+            all_color[zone] = color_name.lower()
+        return all_color
+    
+    @staticmethod
+    def color_to_hex(colors: dict) -> dict:
+        hex_color: dict = {}
+        for zone, color_name in colors.items():
+            try:
+                hex_color[zone] = webcolors.name_to_hex(color_name)
+            except ValueError:
+                hex_color[zone] = "#ffffff"
+        return hex_color
+    
+    @staticmethod
+    def hex_to_ansi_rgb(hex_color: str) -> str:
+        rgb = webcolors.hex_to_rgb(hex_color)
+        return f"\033[38;2;{rgb.red};{rgb.green};{rgb.blue}m"
+    
+    def colorize(self, zone: str, text: str) -> str:
+        hex_val: str = self.hex_color.get(zone, "#ffffff")
+        ansi: str = self.hex_to_ansi_rgb(hex_val)
+        return f"{ansi}{text}{self.RESET}"
+    
+    def format_move(self, drone_id: int, zone: str) -> str:
+        raise NotImplementedError
+
+class RestrictedMovePrinter(BaseDronePrinter):
+    def format_move(self, drone_id: int, zone: str) -> str:
+        from_zone, to_zone = zone.split("-")
+
+        colored_from = self.colorize(from_zone, from_zone)
+        colored_to = self.colorize(to_zone, to_zone)
+        return f"D{drone_id}-{colored_from}-{colored_to}"
+
+class SimpleMovePrinter(BaseDronePrinter):
+    def format_move(self, drone_id: int, zone: str) -> str:
+        colored_to: str = self.colorize(zone, zone)
+        return f"D{drone_id}-{colored_to}"
 
 
 
-# class Color:
-#     all_color: dict = {}
-#     def __init__(self, graph):
-#         self.map = graph
-#         Color.all_color = Color.get_zone_color(graph)
-#         ...
+# hubs = {
+#     'start': {'color': 'Grey'}, 
+#     'end': {'color': 'Mahogany'}, 
+#     'a': {'color': 'Coral'}, 
+#     'b': {'color': 'red'}, 
+#     'c': {'color': 'blue'}, 
+#     'j': {'color': 'red'}, 
+#     'd': {'color': 'orange'}, 
+#     'e': {'color': 'red'}, 
+#     'f': {'color': 'reld'}, 
+# }
 
 
-#     @staticmethod
-#     def get_zone_color(graph: dict[str, Any]) -> dict[str, str]:
-#         all_color: dict[str, str] = {}
-#         for zone in graph["hubs"]:
-#             color_name: str = graph["hubs"][zone]["color"] or "white"
-#             all_color[zone] = COLOR_MAP.get(
-#                 color_name.lower(),
-#                 Fore.WHITE    # unknown color → white fallback
-#             )
-#         return all_color
-
-
-# COLOR_MAP: dict[str, str] = {}
-
-# def get_zone_color(graph):
-#     all_color: dict[str, str] = {}
-#     for zone in graph["hubs"]:
-#         color_name: str = graph["hubs"][zone]["color"] or "white"
-#         all_color[zone] = COLOR_MAP.get(
-#             color_name.lower(),
-#             Fore.WHITE    # unknown color → white fallback
-#         )
-#     return all_color
-
-# print(get_zone_color(graph))
+# # Run the code
+# if __name__ == "__main__":
+#     graph = {"hubs": hubs}
+#     printer = RestrictedMovePrinter(graph)
+#     printes = SimpleMovePrinter(graph)
+    
+#     # Test with different moves
+#     print(printer.format_move(1, "c-e"))
+#     print(printer.format_move(2, "a-d"))
+#     print(printes.format_move(3, "end"))
