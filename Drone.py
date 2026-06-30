@@ -10,6 +10,7 @@ class Drone:
         self.drones_id: int = drones_id
         self.location: str = graph["start_zone"]
         self.statue: str = "waiting"
+        self.visit_zone: tuple = {self.location}
 
         self.wait_turns: int = 0
         self.rest_zone_landing: str = ""
@@ -38,7 +39,7 @@ class Drone:
 
             next_cost: float = self.graph["distances"][next_zone][0]
 
-            if float(next_cost) > float(location_cost):
+            if float(next_cost) > float(location_cost) or next_zone in self.visit_zone:
                 continue
 
             next_zone_data: dict[str, Any] = self.graph["hubs"].get(
@@ -69,6 +70,7 @@ class Drone:
     def move_to_next_zone(self, next_zone: str) -> None:
         """Move drone to next zone."""
         self.location = next_zone
+        self.visit_zone.add(next_zone)
         if next_zone == self.graph["end_zone"]:
             self.statue = "DELIVERED"
 
