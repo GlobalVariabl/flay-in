@@ -10,7 +10,7 @@ run:
 install:
 	$(PYTHON) -m venv $(VENV)
 	$(PIP) install --upgrade pip
-	$(PIP) install flake8 mypy webcolors
+	$(PIP) install flake8 mypy "webcolors>=25.10.0"   "rich>=15.0.0"        
 	@echo ""
 	@echo "Run this command manually:"
 	@echo "   source $(VENV)/bin/activate"
