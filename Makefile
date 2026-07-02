@@ -1,23 +1,18 @@
-# ─────────────────────────────────────────────
-#  Makefile — FLY-IN Project
-# ─────────────────────────────────────────────
-
 PYTHON      := python3
 MAIN        := route_all.py
 VENV        := fly_env
 PIP         := $(VENV)/bin/pip
-
-.PHONY: install run debug lint lint-strict clean help
+MAP 		:= ./medium/01_dead_end_trap.txt
 
 run:
-	$(PYTHON) $(MAIN)
+	@$(PYTHON) $(MAIN) $(MAP)
 
 install:
 	$(PYTHON) -m venv $(VENV)
 	$(PIP) install --upgrade pip
-	$(PIP) install flake8 mypy colorama
+	$(PIP) install flake8 mypy webcolors
 	@echo ""
-	@echo "📌 Run this command manually:"
+	@echo "Run this command manually:"
 	@echo "   source $(VENV)/bin/activate"
 
 
@@ -25,21 +20,15 @@ debug:
 	$(PYTHON) -m pdb $(MAIN)
 
 lint:
-	mypy . \
+	flake8 *.py
+	mypy *.py \
 		--warn-return-any \
 		--warn-unused-ignores \
 		--ignore-missing-imports \
 		--disallow-untyped-defs \
 		--check-untyped-defs
-	flake8 *.py
-
-
-lint-strict:
-	flake8 *.py
-	mypy . --strict
 
 clean:
-	find . -type d -name "__pycache__" -exec rm -rf {} +
-	find . -type d -name ".mypy_cache" -exec rm -rf {} +
-	find . -type f -name "*.pyc"       -delete
-	find . -type f -name "*.pyo"       -delete
+	@find . -name "__pycache__" -exec rm -rf {} +
+	@find . -name ".mypy_cache" -exec rm -rf {} +
+

@@ -1,31 +1,76 @@
 from typing import Any, Optional
 from Drone import Drone
-from Color import *
+from Color import RestrictedMovePrinter, SimpleMovePrinter
+
 
 class Simulation:
-    """Manages turn-by-turn simulation.
-    Simulation will accept drone next move"""
+    """
+    Manages turn-by-turn simulation of all drones.
+
+    Drives the main simulation loop: each turn, every drone
+    attempts to move toward the goal following the gradient field,
+    subject to zone capacity and connection capacity constraints,
+    until every drone has been delivered.
+
+    Attributes
+    ----------
+    graph : dict[str, Any]
+        Shared reference to the full simulation graph.
+    turn : int
+        Current turn number.
+    goal : str
+        Name of the end zone.
+    track_drone : list[Drone]
+        All drones participating in the simulation.
+    """
 
     def __init__(self, graph: dict[str, Any]) -> None:
-        """Initialize simulation."""
+        """
+        Initialize and immediately run the simulation.
+
+        Parameters
+        ----------
+        graph : dict[str, Any]
+            The fully assembled graph from Json_file, including
+            hubs, adjacency list, and Dijkstra distances.
+        """
         self.graph: dict[str, Any] = graph
         self.turn: int = 0
         self.goal: str = graph["end_zone"]
         self.track_drone: list[Drone] = []
-        self.printer = RestrictedMovePrinter(graph)
-        self.printes = SimpleMovePrinter(graph)
+        self.printer: RestrictedMovePrinter = RestrictedMovePrinter(graph)
+        self.printes: SimpleMovePrinter = SimpleMovePrinter(graph)
         self.run()
 
     def all_delivered(self) -> bool:
-        """Check if all drones delivered."""
+        """
+        Check whether every drone has reached the goal.
+
+        Returns
+        -------
+        bool
+            True if all drones have status "DELIVERED", False
+            otherwise.
+        """
         return all(drone.statue == "DELIVERED" for drone in self.track_drone)
 
     def run(self) -> None:
-        """Run simulation until all drones delivered."""
-        self.turn = 0
+        """
+        Run the simulation loop until all drones are delivered.
+
+        Creates one Drone per unit in drones_number, then repeats
+        the turn logic (move each drone, resolve zone/connection
+        capacity, reset per-turn connection state, print progress)
+        until all_delivered() is True.
+        """
 
         for drone_id in range(1, self.graph["drones_number"] + 1):
-            drone = Drone(drone_id, self.graph)
+            drone: Drone = Drone(drone_id, self.graph)
+            paths: list[str] = self.graph.get("launch_paths", [])
+            if paths:
+                drone.forced_first = paths[(drone_id - 1) % len(paths)]
+            else:
+                drone.forced_first = ""
             self.track_drone.append(drone)
 
         while not self.all_delivered():
@@ -75,16 +120,13 @@ class Simulation:
                 if current_hold < max_drones:
                     leaving: str = drone.location
                     landing: str = zone
+                else:
+                    continue
 
                 if leaving != self.graph["start_zone"]:
                     self.graph["hubs"][leaving]["holde"] -= 1
 
                 self.graph["hubs"][landing]["holde"] += 1
-
-                if self.graph["hubs"][landing]["holde"] == max_drones:
-                    self.graph["hubs"][landing]["state"] = "full"
-                else:
-                    self.graph["hubs"][landing]["state"] = "empty"
 
                 if connection_idx is not None:
                     self.graph["graph"][drone.location][connection_idx][

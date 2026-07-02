@@ -32,9 +32,9 @@ Terminal output — turn-by-turn drone positions
 
 | Zone | Movement cost | Effect |
 |---|---|---|
-| `normal` | 2 | standard movement |
+| `normal` | 1 | standard movement |
 | `priority` | 1 | drones prefer these |
-| `restricted` | 3 | costs extra turn to cross |
+| `restricted` | 2 | costs extra turn to cross |
 | `blocked` | 151 | effectively impassable |
 
 ---
@@ -49,7 +49,7 @@ Instead of running Dijkstra per drone per turn, FLY-IN runs **one reverse Dijkst
 goal:  0
 A:     1   (priority zone)
 B:     3   (restricted zone)
-start: 3   (normal + A cost)
+start: 4   (normal + A cost)
 ```
 
 Drones then follow the gradient downhill each turn — no pathfinding per drone needed. This is O(n log n) once vs O(n log n × drones × turns).
@@ -84,16 +84,19 @@ Each turn:
 The simulation outputs a turn-by-turn terminal trace showing each drone's movement:
 
 ```
-Turn 1:   D1-junction   D2-junction
-Turn 2:   D1-correct_path   D3-junction
-Turn 3:   D1-intermediate   D2-correct_path   D4-junction
-Turn 4:   D1-goal   D2-intermediate   D3-correct_path   D5-junction
-Turn 5:   D2-goal   D3-intermediate   D4-correct_path
-Turn 6:   D3-goal   D4-intermediate   D5-correct_path
-Turn 7:   D4-goal   D5-intermediate
-Turn 8:   D5-goal
+Turn 1:   D1-d   D2-start-a   D3-d   D4-start-a
+Turn 2:   D1-d-f   D2-a   D3-d-f   D4-a   D5-d   D6-d
+Turn 3:   D1-f   D2-b   D3-f   D4-b   D5-d-f
+Turn 4:   D1-f-e   D2-b-f   D3-f-e   D5-f   D6-d-f
+Turn 5:   D1-e   D2-f   D3-e   D6-f
+Turn 6:   D1-goal   D2-f-e   D4-b-f
+Turn 7:   D2-e   D3-goal   D4-f   D5-f-e
+Turn 8:   D2-goal   D4-f-e   D5-e
+Turn 9:   D4-e   D5-goal   D6-f-e
+Turn 10:   D4-goal   D6-e
+Turn 11:   D6-goal
 
-Total turns: 8
+Total turns: 11
 ```
 
 Each line shows: turn number + drone ID + destination zone. This lets the user trace every drone's path through the graph and verify routing decisions, capacity constraints, and zone interactions at each step.
@@ -130,7 +133,7 @@ make install
 make run
 
 # or directly
-python3 step_one.py
+python3 route_all.py <map.txt>
 ```
 
 ### Debug
@@ -145,8 +148,6 @@ make debug
 # mandatory flags
 make lint
 
-# strict mode
-make lint-strict
 ```
 
 ### Clean
@@ -157,15 +158,30 @@ make clean
 
 ### Input file format
 
+Example input 
 ```
-# comment
-nb_drones: 5
+nb_drones: 6
 
-start_hub: name x y [color=green max_drones=N]
-hub: name x y [zone=priority color=blue max_drones=N]
-end_hub: name x y [color=green max_drones=N]
+start_hub: start 0 0 [color=green max_drones=6]
+hub: a 1 0 [zone=restricted color=orange max_drones=2]
+hub: b 2 0 [color=orange max_drones=2]
+hub: c 2 1 [color=orange max_drones=1 zone=blocked]
+hub: d 1 1 [color=orange max_drones=2]
+hub: f 3 0 [zone=restricted color=blue max_drones=3]
+hub: e 4 0 [zone=restricted color=Purple  max_drones=2]
+end_hub: goal 5 0 [color=red max_drones=3]
 
-connection: from-to [max_link_capacity=N]
+connection: start-a [max_link_capacity=2]
+connection: start-d [max_link_capacity=3]
+
+connection: a-b [max_link_capacity=2]
+connection: a-c [max_link_capacity=2]
+connection: d-f [max_link_capacity=2]
+connection: e-f [max_link_capacity=2]
+connection: b-f [max_link_capacity=1]
+connection: c-e [max_link_capacity=2]
+connection: c-d [max_link_capacity=2]
+connection: e-goal
 ```
 
 **Sections must appear in this order:**
@@ -195,14 +211,12 @@ connection: from-to [max_link_capacity=N]
 
 ### AI Usage
 
-Claude (Anthropic) was used for the following tasks:
+ai was used for the following tasks:
 
 | Task | Parts of project |
 |---|---|
-| Type hint fixes | `Read_file.py`, `RegEx_line.py`, `Json_file.py`, `simulation.py` |
+| Type hint fixes | `Read_file.py`, `RegEx_line.py`, `Json_file.py`, `Simulation.py` |
 | mypy and flake8 compliance | all `.py` files |
 | Test pipeline setup | `Makefile`, `test_parser.sh`, `tests/` |
-| Concept explanations | Dijkstra, heapq, regex, OOP, namespaces, LEGB |
-| Makefile rules | `install`, `run`, `debug`, `lint`, `clean` |
 
-AI was used as a learning and debugging tool — all logic, algorithm choices, and architecture decisions were made by the developer.
+AI was used as a learning and debugging tool — all logic, algorithm choices, and architecture decisions were made by the me.
