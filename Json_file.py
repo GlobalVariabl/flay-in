@@ -215,7 +215,6 @@ class Json_file:
                 f" Check for: All blocked zones cutting all routes"
                 f" OR unconnected graph"
             )
-        print(distances)
         return distances
 
     @staticmethod

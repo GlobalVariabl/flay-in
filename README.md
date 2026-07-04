@@ -84,19 +84,24 @@ Each turn:
 The simulation outputs a turn-by-turn terminal trace showing each drone's movement:
 
 ```
-Turn 1:   D1-d   D2-start-a   D3-d   D4-start-a
-Turn 2:   D1-d-f   D2-a   D3-d-f   D4-a   D5-d   D6-d
-Turn 3:   D1-f   D2-b   D3-f   D4-b   D5-d-f
-Turn 4:   D1-f-e   D2-b-f   D3-f-e   D5-f   D6-d-f
-Turn 5:   D1-e   D2-f   D3-e   D6-f
-Turn 6:   D1-goal   D2-f-e   D4-b-f
-Turn 7:   D2-e   D3-goal   D4-f   D5-f-e
-Turn 8:   D2-goal   D4-f-e   D5-e
-Turn 9:   D4-e   D5-goal   D6-f-e
-Turn 10:   D4-goal   D6-e
-Turn 11:   D6-goal
+Turn 1: D1-d3  D2-d1  D3-d2  D5-d1  D8-d1  D11-d1 
+Turn 2: D1-m3  D2-m2  D3-m2  D4-d3  D5-d1-m1  D6-d2  D7-d1  D9-d1 
+Turn 3: D1-c2  D2-c3  D3-c2  D4-m3  D5-m1  D6-m2  D7-m2  D8-d1-m1  D10-d3  D12-d2  D13-d1  D14-d1 
+Turn 4: D1-c2-merge1  D2-c3-merge2  D4-c3  D5-c1  D6-c2  D7-c3  D8-m1  D9-m2  D10-m3  D11-d1-m1  D12-m2  D15-d3  D16-d2  D17-d1  D18-d1 
+Turn 5: D1-merge1  D2-merge2  D3-c2-merge1  D4-c3-merge2  D5-c1-merge1  D8-c1  D9-c2  D10-c3  D11-m1  D13-m2  D14-d1-m1  D15-m3  D16-m3  D19-d3  D20-d2 
+Turn 6: D1-end  D2-end  D3-merge1  D4-merge2  D5-merge1  D6-c2-merge1  D7-c3-merge2  D11-c1  D12-c2  D13-c3  D14-m1  D17-m2  D18-d1-m1  D19-d3-m4  D20-m2 
+Turn 7: D3-end  D4-end  D6-merge1  D7-merge2  D8-c1-merge1  D10-c3-merge2  D14-c1  D15-c3  D18-m1  D19-m4 
+Turn 8: D5-end  D7-end  D8-merge1  D9-c2-merge1  D10-merge2  D13-c3-merge2  D16-c2  D17-c3  D19-c4 
+Turn 9: D6-end  D9-merge1  D10-end  D11-c1-merge1  D13-merge2  D15-c3-merge2  D18-c1  D19-c4-merge2  D20-c3 
+Turn 10: D8-end  D11-merge1  D12-c2-merge1  D13-end  D15-merge2  D17-c3-merge2  D19-merge2 
+Turn 11: D9-end  D12-merge1  D14-c1-merge1  D15-end  D17-merge2  D20-c3-merge2 
+Turn 12: D11-end  D14-merge1  D16-c2-merge1  D17-end  D20-merge2 
+Turn 13: D12-end  D16-merge1  D18-c1-merge1  D19-end 
+Turn 14: D14-end  D18-merge1  D20-end 
+Turn 15: D16-end 
+Turn 16: D18-end  
 
-Total turns: 11
+Total turns: 16
 ```
 
 Each line shows: turn number + drone ID + destination zone. This lets the user trace every drone's path through the graph and verify routing decisions, capacity constraints, and zone interactions at each step.
@@ -160,28 +165,63 @@ make clean
 
 Example input 
 ```
-nb_drones: 6
+nb_drones: 20
 
-start_hub: start 0 0 [color=green max_drones=6]
-hub: a 1 0 [zone=restricted color=orange max_drones=2]
-hub: b 2 0 [color=orange max_drones=2]
-hub: c 2 1 [color=orange max_drones=1 zone=blocked]
-hub: d 1 1 [color=orange max_drones=2]
-hub: f 3 0 [zone=restricted color=blue max_drones=3]
-hub: e 4 0 [zone=restricted color=Purple  max_drones=2]
-end_hub: goal 5 0 [color=red max_drones=3]
+start_hub: start 0 0 [color=green max_drones=20 zone=priority]
+end_hub: end 14 0 [color=green max_drones=20 zone=priority]
 
-connection: start-a [max_link_capacity=2]
-connection: start-d [max_link_capacity=3]
+# Layer 1 (Distribution)
+hub: d1 2 4 [color=blue max_drones=4 zone=normal]
+hub: d2 2 0 [color=blue max_drones=4 zone=normal]
+hub: d3 2 -4 [color=blue max_drones=4 zone=priority]
 
-connection: a-b [max_link_capacity=2]
-connection: a-c [max_link_capacity=2]
-connection: d-f [max_link_capacity=2]
-connection: e-f [max_link_capacity=2]
-connection: b-f [max_link_capacity=1]
-connection: c-e [max_link_capacity=2]
-connection: c-d [max_link_capacity=2]
-connection: e-goal
+# Layer 2 (Middle)
+hub: m1 5 4 [color=yellow max_drones=2 zone=restricted]
+hub: m2 5 1 [color=yellow max_drones=2 zone=normal]
+hub: m3 5 -1 [color=yellow max_drones=2 zone=normal]
+hub: m4 5 -4 [color=yellow max_drones=2 zone=restricted]
+
+# Layer 3 (Connecting)
+hub: c1 8 4 [color=orange max_drones=2 zone=normal]
+hub: c2 8 1 [color=orange max_drones=2 zone=normal]
+hub: c3 8 -1 [color=orange max_drones=2 zone=normal]
+hub: c4 8 -4 [color=orange max_drones=2 zone=normal]
+
+# Layer 4 (Merge)
+hub: merge1 11 2 [color=red max_drones=3 zone=restricted]
+hub: merge2 11 -2 [color=red max_drones=3 zone=restricted]
+
+# Connections - Layer 1 to Layer 2
+connection: start-d1 [max_link_capacity=5]
+connection: start-d2
+connection: start-d3
+
+connection: d1-m1
+connection: d1-m2
+connection: d2-m2
+connection: d2-m3
+connection: d3-m3
+connection: d3-m4
+
+# Connections - Layer 2 to Layer 3
+connection: m1-c1
+connection: m1-c2
+connection: m2-c2
+connection: m2-c3
+connection: m3-c2
+connection: m3-c3
+connection: m4-c3
+connection: m4-c4
+
+# Connections - Layer 3 to Layer 4
+connection: c1-merge1
+connection: c2-merge1
+connection: c3-merge2
+connection: c4-merge2
+
+# Connections - Layer 4 to End
+connection: merge1-end
+connection: merge2-end
 ```
 
 **Sections must appear in this order:**

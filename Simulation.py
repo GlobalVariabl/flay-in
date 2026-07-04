@@ -148,11 +148,16 @@ class Simulation:
                 for holde in self.graph["graph"][connection_zone]:
                     holde["holde"] = 0
             if move_track:
-                output: str = " ".join(
-                    "  " + self.printer.format_move(did, zone) if "-" in zone
-                    else "  " + self.printes.format_move(did, zone)
-                    for did, zone in move_track
-                )
+                output: str = ""
+                alls: list = []
+                for id_drone, zone in move_track:
+                    if "-" in zone:
+                        colored = self.printer.format_move(id_drone, zone)
+                    else:
+                        colored = self.printes.format_move(id_drone, zone)
+
+                    alls.append(f"{colored} ")
+                output = " ".join(alls)
                 print(f"Turn {self.turn + 1}: {output}")
 
             self.turn += 1

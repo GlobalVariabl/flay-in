@@ -72,7 +72,7 @@ class Drone:
         all_zones: list[Any] = self.graph["graph"][location]
         location_cost: float = self.graph["distances"][location][0]
         best_cost: float = float("inf")
-
+        best_load: float = float("inf")
         if self.forced_first:
             zone: str = self.forced_first
             self.forced_first = ""
@@ -101,24 +101,24 @@ class Drone:
             )
 
             current: int = next_zone_data.get("holde", 0)
-            maximum: float = next_zone_data.get("max_drones", 1)
-            zone_type = next_zone_data.get("zone", "normal")
+            maximum: int = next_zone_data.get("max_drones", 1)
+            zone_type: str = next_zone_data.get("zone", "normal")
             if current >= maximum:
                 continue
 
             if capacity_link == holde_link:
                 continue
 
-            if next_cost < best_cost and zone_type == "normal":
+            if next_cost < best_cost:
                 best_cost = next_cost
                 best_zone = next_zone
-            elif next_cost <= best_cost and zone_type == "priority":
-                best_cost = next_cost
-                best_zone = next_zone
-            elif next_cost < best_cost:
-                best_cost = next_cost
-                best_zone = next_zone
+                best_load = current
 
+            elif next_cost == best_cost:
+                if current < best_load:
+                    best_zone = next_zone
+                elif current == best_load and zone_type == "priority":
+                    best_zone = next_zone
         return best_zone
 
     def move_to_next_zone(self, next_zone: str) -> None:

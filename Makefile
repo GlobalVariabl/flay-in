@@ -2,7 +2,7 @@ PYTHON      := python3
 MAIN        := route_all.py
 VENV        := fly_env
 PIP         := $(VENV)/bin/pip
-MAP 		:= ./medium/01_dead_end_trap.txt
+MAP 		:= ./hard/02_capacity_hell.txt 
 
 run:
 	@$(PYTHON) $(MAIN) $(MAP)
@@ -10,7 +10,7 @@ run:
 install:
 	$(PYTHON) -m venv $(VENV)
 	$(PIP) install --upgrade pip
-	$(PIP) install flake8 mypy "webcolors>=25.10.0"   "rich>=15.0.0"        
+	$(PIP) install flake8 mypy "webcolors>=25.10.0"
 	@echo ""
 	@echo "Run this command manually:"
 	@echo "   source $(VENV)/bin/activate"

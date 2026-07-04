@@ -79,12 +79,12 @@ class RegEx_line:
         if self.start_zone[0]["zone"] == "blocked":
             raise ValueError(
                 f"The start zone: {self.start_zone[0]['name']}"
-                f" is Inaccessible zone : {self.start_zone[1] + 1}"
+                f" is Inaccessible zone ,line {self.start_zone[1] + 1}"
             )
         if self.end_zone[0]["zone"] == "blocked":
             raise ValueError(
                 f"The End zone: {self.end_zone[0]['name']}"
-                f" is Inaccessible zone : {self.start_zone[1] + 1}"
+                f" is Inaccessible zone ,line {self.start_zone[1] + 1}"
             )
         for idx, line in enumerate(self.hub):
             self.hub[idx][0] = RegEx_line.validit_hub_sd(
